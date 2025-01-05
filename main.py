@@ -3,32 +3,32 @@ class Category:
         self.ledger = []
         self.category = category
         self.total = 0
-    def deposit(self,amount,description):
-        new_deposit = {'amount': amount, 'description':description}
+    def deposit(self,amount,description=""):
+        new_deposit = {'amount': round(amount,2), 'description':description}
         self.ledger.append(new_deposit)
         self.total += amount
         return True
-    def withdraw(self,amount,descrition):
+    def withdraw(self,amount,descrition=""):
         if self.check_funds(amount):
-            self.ledger[0]['amount']=  self.ledger[0]['amount'] - amount
-            new_withdraw = {'amount': -amount,'description':descrition}
+            new_withdraw = {'amount': round(amount,2),'description':descrition}
+
             self.ledger.append(new_withdraw)
             self.total -= amount
             return True
         else:
             return False
     def get_balance(self):
-        return self.ledger[0]['amount']
+        return self.total
     
     def transfer(self,amount,place):
         if self.check_funds(amount):
             self.withdraw(amount,f'Transfer to {place.category.capitalize()}')
-            place.deposit(amount,f'Deposit from {self.category.capitalize()}')
+            place.deposit(amount,f'Transfer from {self.category.capitalize()}')
             return True
         else:
             return False
     def check_funds(self,amount):
-        if self.ledger[0]['amount'] >= amount:
+        if float(self.ledger[0]['amount']) >= amount:
             return True
         else:
             return False
@@ -42,12 +42,14 @@ class Category:
             len_desc = len(item['description'])
             str_amount = len(str(item['amount']))
             spaces = 30 - len_desc - str_amount
-            if spaces == 0:
-                desc = item['description'][:24]
-                amount = str(item['amount'][:8])
-                str_items.append([amount,desc])
+            if spaces <= 0:
+                desc = item['description']
+                amount = str(item['amount'])
+                spacing = 7 - len(amount)
+                str_items.append([desc[:23]," "*spacing,amount[:7]])
             else:
-                str_items.append([item['description'], " " * spaces,str(item["amount"],)])
+                amount = str(item["amount"])
+                str_items.append([item['description'], " " * spaces,amount[:7]])
         
         total = f"Total: {self.total}"
         final_str = []
@@ -57,10 +59,13 @@ class Category:
 
 
 def create_spend_chart(categories):
-    pass
+    head_string = "Percentage spent by category"
+    return head_string
 
-food = Category('food')
-food.deposit(1000,'deposit')
+food = Category('Food')
+food.deposit(1000, 'deposit')
+food.withdraw(10.15, 'groceries')
+food.withdraw(15.89, 'restaurant and more food for dessert')
 clothing = Category('Clothing')
-food.transfer(100,clothing)
+food.transfer(50, clothing)
 print(food)
