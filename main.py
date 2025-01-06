@@ -4,13 +4,13 @@ class Category:
         self.category = category
         self.total = 0
     def deposit(self,amount,description=""):
-        new_deposit = {'amount': round(amount,2), 'description':description}
+        new_deposit = {'amount': amount, 'description':description}
         self.ledger.append(new_deposit)
         self.total += amount
         return True
     def withdraw(self,amount,descrition=""):
         if self.check_funds(amount):
-            new_withdraw = {'amount': round(amount,2),'description':descrition}
+            new_withdraw = {'amount': -amount,'description':descrition}
 
             self.ledger.append(new_withdraw)
             self.total -= amount
@@ -40,16 +40,19 @@ class Category:
         for item in self.ledger:
             places = 30
             len_desc = len(item['description'])
-            str_amount = len(str(item['amount']))
-            spaces = 30 - len_desc - str_amount
+            amount = float(item["amount"])
+            str_amount = f"{amount:.2f}"
+            spaces = places - len_desc - len(str_amount)
             if spaces <= 0:
                 desc = item['description']
-                amount = str(item['amount'])
-                spacing = 7 - len(amount)
-                str_items.append([desc[:23]," "*spacing,amount[:7]])
+                amount = float(item['amount'])
+                str_amount = f"{amount:.2f}"
+                spacing = 7 - len(str_amount)
+                str_items.append([desc[:23]," "*spacing,str_amount])
             else:
-                amount = str(item["amount"])
-                str_items.append([item['description'], " " * spaces,amount[:7]])
+                amount = float(item["amount"])
+                str_amount = f"{amount:.2f}"
+                str_items.append([item['description'], " " * spaces,str_amount])
         
         total = f"Total: {self.total}"
         final_str = []
@@ -59,13 +62,43 @@ class Category:
 
 
 def create_spend_chart(categories):
-    head_string = "Percentage spent by category"
-    return head_string
-
+    total_spent = 0
+    total_spent = round(total_spent,2)
+    final_list = []
+    spent_by_category = []
+    for i in range(100,-10,-10):
+        if i == 100:
+            final_list.append(f"{i}| ")
+        elif i == 0:
+            final_list.append(f"  {i}| ")
+        else:
+            final_list.append(f" {i}| ")
+        
+    for category in categories:
+        total_spent_category = 0
+        for item in category.ledger:
+            if item["amount"] < 0:
+                total_spent_category += item["amount"] * -1
+                total_spent += item["amount"] * -1
+        spent_by_category.append(round(total_spent_category,2))
+    percent_table = []
+    for i in range(len(categories)):
+        percent_spent = (100 * (spent_by_category[i] / total_spent)) / 10
+        percent_table.append(round(percent_spent) * 10)
+    for i in range(len(categories)):
+        for j in range(100,-10,-10):
+            if j >= percent_table[i]:
+                final_list[j // 10] = f"{final_list[j//10]}o  "
+            
+    head_string = "Percentage spent by category\n"
+    return head_string + "\n".join(final_list)
+    
 food = Category('Food')
 food.deposit(1000, 'deposit')
 food.withdraw(10.15, 'groceries')
 food.withdraw(15.89, 'restaurant and more food for dessert')
 clothing = Category('Clothing')
 food.transfer(50, clothing)
-print(food)
+clothing.withdraw(25.20,'new shirt')
+categories = [food,clothing]
+print(create_spend_chart(categories))
